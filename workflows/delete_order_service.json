@@ -1,0 +1,110 @@
+{
+  "name": "delete-order-service",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "2e2f96cf-c253-4e32-9aa6-d7f23164c752",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [
+        1000,
+        -340
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"message\": \"ok\"\n}",
+        "options": {}
+      },
+      "id": "2e320429-7991-4376-b88b-3ddaf0a2a9ed",
+      "name": "finish",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1460,
+        -340
+      ],
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "method": "DELETE",
+        "url": "=http://192.168.1.155:3989/orders/{{ $json.data.id }}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "972d941d-0ec8-47f5-9a7d-d608efa8cb97",
+      "name": "delete-order",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1220,
+        -340
+      ],
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "pinData": {
+    "Execute Workflow Trigger": [
+      {
+        "json": {
+          "data": {
+            "id": "asdasdasdasd"
+          }
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "delete-order",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "delete-order": {
+      "main": [
+        [
+          {
+            "node": "finish",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "timezone": "Asia/Bangkok",
+    "saveExecutionProgress": true,
+    "executionTimeout": 600
+  },
+  "versionId": "ac97cd55-f2e0-42c2-8fba-d69e84d64791",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "templateId": "1966",
+    "instanceId": "25b16ad807772f39504621ff5932db7bcf10680c4b6d8e356a1dc67faf8a40aa"
+  },
+  "id": "espayOzIv9qp32kU",
+  "tags": []
+}

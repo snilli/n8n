@@ -1,0 +1,448 @@
+{
+  "name": "handle error",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "2300b74a-0fbf-4652-8ca7-63652bd261c4",
+      "name": "start",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [
+        340,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "keys",
+        "keyPattern": "paid-fail:*"
+      },
+      "id": "86256dc7-28e1-477f-ab92-9d80b747b585",
+      "name": "get-paymenys-error",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        740,
+        400
+      ],
+      "credentials": {
+        "redis": {
+          "id": "pOruTxwVcNhxeUpU",
+          "name": "pPong Provide"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "propertyName": "data",
+        "key": "dlq-paid-fail",
+        "keyType": "sets",
+        "options": {}
+      },
+      "id": "e7311606-0763-4f7e-94ec-dbd42d2ff0c8",
+      "name": "get-dql-paymenys-error",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        520,
+        400
+      ],
+      "credentials": {
+        "redis": {
+          "id": "pOruTxwVcNhxeUpU",
+          "name": "pPong Provide"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// const q = {\n//   \"paid-fail:dfdfdfdf\": 1, \n//   \"paid-fail:dfdfdfdfdfdf\": 1,\n//   \"asdsd\": 3\n// }\nconst paymentsError = $('get-paymenys-error').first().json\nconst output = Object\n  .entries(paymentsError)\n  .reduce((acc, [key, value]) => {\n    console.log(key)\n    acc[key.split(\"paid-fail:\")[1]] = parseInt(value)\n\n    return acc\n  }, {})\nconsole.log(123)\nconst newErrorId = $('start').first().json.data.id\nconst dql = $('get-dql-paymenys-error').first().json.data\n\nlet retryTime = 1\nif (output[newErrorId]) {\n  retryTime = output[newErrorId] += 1\n}\n\nlet publish\nconst isLimitRetry = retryTime > 3\nif (isLimitRetry) {\n  delete output[newErrorId]\n  dql.push(newErrorId)\n} else {\n  output[newErrorId] = retryTime\n  publish = {\n    \"key\": newErrorId,\n    \"retryTime\": retryTime\n  }\n}\n\nreturn {\n  \"data\": {\n    \"newData\": Object.entries(output).map(([key, value]) => ({\n      \"id\": key,\n      \"retryTime\": value\n    })),\n    \"publish\": publish,\n    \"dlq\": dql\n  }\n}"
+      },
+      "id": "76d53c59-7fdb-490f-bf64-8ab245c388b5",
+      "name": "parser-data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        940,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "data.newData",
+        "options": {
+          "disableDotNotation": false,
+          "destinationFieldName": "data"
+        }
+      },
+      "id": "bad08c1b-cd38-49a6-9365-2bbb0cab91df",
+      "name": "split-new-data",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        1220,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "dlq-paid-fail",
+        "value": "={{ $('parser-data').item.json.data.dlq }}",
+        "keyType": "sets"
+      },
+      "id": "c5687cb7-ba2a-4d76-96eb-b630f1428e2e",
+      "name": "set-dlq-paid-fail",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        1500,
+        760
+      ],
+      "credentials": {
+        "redis": {
+          "id": "pOruTxwVcNhxeUpU",
+          "name": "pPong Provide"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\"data\": {{ $json.data.dlq }} }",
+        "options": {}
+      },
+      "id": "a403470d-5b69-47c8-ba0f-fadfd2e0f97d",
+      "name": "pick-dlq-data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.2,
+      "position": [
+        1720,
+        760
+      ]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "data",
+        "options": {}
+      },
+      "id": "c265bc4d-30aa-4992-95f8-b3202e24cab0",
+      "name": "split-dlq-paid-fail",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        1940,
+        760
+      ]
+    },
+    {
+      "parameters": {
+        "batchSize": 3,
+        "options": {}
+      },
+      "id": "240a746e-3741-46d8-9286-da83b61b05dc",
+      "name": "loop",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        2160,
+        760
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "key": "=paid-fail:{{ $json.data }}"
+      },
+      "id": "7d795631-1e02-4db9-abef-e96532383f0f",
+      "name": "delete-over-paid",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        2400,
+        780
+      ],
+      "credentials": {
+        "redis": {
+          "id": "pOruTxwVcNhxeUpU",
+          "name": "pPong Provide"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "incr",
+        "key": "=paid-fail:{{ $json.data.id }}"
+      },
+      "id": "ada1af5c-ce41-4df2-bf2f-9769e8a43321",
+      "name": "set-payments-error",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        1480,
+        400
+      ],
+      "credentials": {
+        "redis": {
+          "id": "pOruTxwVcNhxeUpU",
+          "name": "pPong Provide"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "22ced187-5b6a-4d05-88c4-5c94b1866be9",
+              "leftValue": "={{ $json.data.publish }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "f2d515f7-fbb0-4644-aaed-9c04753a17db",
+      "name": "publish-paid-error",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1220,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "22ced187-5b6a-4d05-88c4-5c94b1866be9",
+              "leftValue": "={{ $json.data.dlq }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "array",
+                "operation": "lengthGt",
+                "rightType": "number"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "ec7957fd-f0f1-483f-9068-1285858d8f7d",
+      "name": "set-paid-dlq",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1220,
+        780
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "publish",
+        "channel": "trx-fail",
+        "messageData": "={{ JSON.stringify($('parser-data').item.json.data.publish) }}"
+      },
+      "id": "e96930a5-5aa4-42ff-9be6-68b9379134cd",
+      "name": "publish-paid-fail",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        1480,
+        580
+      ],
+      "credentials": {
+        "redis": {
+          "id": "pOruTxwVcNhxeUpU",
+          "name": "pPong Provide"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "start": [
+      {
+        "json": {
+          "data": {
+            "id": "asdsd"
+          }
+        }
+      }
+    ]
+  },
+  "connections": {
+    "start": {
+      "main": [
+        [
+          {
+            "node": "get-dql-paymenys-error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get-paymenys-error": {
+      "main": [
+        [
+          {
+            "node": "parser-data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get-dql-paymenys-error": {
+      "main": [
+        [
+          {
+            "node": "get-paymenys-error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "parser-data": {
+      "main": [
+        [
+          {
+            "node": "publish-paid-error",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "set-paid-dlq",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "split-new-data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "split-new-data": {
+      "main": [
+        [
+          {
+            "node": "set-payments-error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "set-dlq-paid-fail": {
+      "main": [
+        [
+          {
+            "node": "pick-dlq-data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "pick-dlq-data": {
+      "main": [
+        [
+          {
+            "node": "split-dlq-paid-fail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "split-dlq-paid-fail": {
+      "main": [
+        [
+          {
+            "node": "loop",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "loop": {
+      "main": [
+        [],
+        [
+          {
+            "node": "delete-over-paid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "delete-over-paid": {
+      "main": [
+        [
+          {
+            "node": "loop",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "publish-paid-error": {
+      "main": [
+        [
+          {
+            "node": "publish-paid-fail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "set-paid-dlq": {
+      "main": [
+        [
+          {
+            "node": "set-dlq-paid-fail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "00b3e803-01b4-4862-b6e3-7781ec5d0932",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "25b16ad807772f39504621ff5932db7bcf10680c4b6d8e356a1dc67faf8a40aa"
+  },
+  "id": "MKmyzwNCaIWXuOVP",
+  "tags": []
+}

@@ -1,0 +1,182 @@
+{
+  "name": "compensate-order",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "a62ef733-6775-49aa-a363-a75bec59afed",
+      "name": "Start",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        500,
+        660
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "propertyName": "data",
+        "key": "dlq-paid-fail",
+        "keyType": "sets",
+        "options": {}
+      },
+      "id": "e417b6b5-d883-43c7-9fe0-2809bc22d8f9",
+      "name": "get-dlq-paid-fail",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        720,
+        660
+      ],
+      "credentials": {
+        "redis": {
+          "id": "pOruTxwVcNhxeUpU",
+          "name": "pPong Provide"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "data",
+        "options": {}
+      },
+      "id": "79f0ccb8-d81e-4511-ba45-6ff7066187c6",
+      "name": "Split Out",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        940,
+        660
+      ]
+    },
+    {
+      "parameters": {
+        "options": {
+          "reset": false
+        }
+      },
+      "id": "ae79d302-6511-4b74-9ff3-4cfba0f58924",
+      "name": "Loop Over Items",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1160,
+        660
+      ],
+      "alwaysOutputData": true,
+      "executeOnce": true,
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "key": "dlq-paid-fail"
+      },
+      "id": "c3443d44-3e32-4ac5-bc30-5a15b83daa7a",
+      "name": "delete-dlq-paid-fail",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        1380,
+        480
+      ],
+      "credentials": {
+        "redis": {
+          "id": "pOruTxwVcNhxeUpU",
+          "name": "pPong Provide"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowId": "espayOzIv9qp32kU",
+        "mode": "each",
+        "options": {}
+      },
+      "id": "51844845-4224-4fbc-9ed7-76d9aa9bfe9e",
+      "name": "delete-order",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        1380,
+        680
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "get-dlq-paid-fail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get-dlq-paid-fail": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "delete-dlq-paid-fail",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "delete-order",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "delete-order": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "47b060f8-f541-4335-ae7d-4d2ac21cd70a",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "25b16ad807772f39504621ff5932db7bcf10680c4b6d8e356a1dc67faf8a40aa"
+  },
+  "id": "74GAONCic0MDBql2",
+  "tags": []
+}

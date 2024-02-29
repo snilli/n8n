@@ -1,0 +1,233 @@
+{
+  "name": "paid-service",
+  "nodes": [
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "55725518-474d-4844-93d3-3c3f4a499da2",
+              "leftValue": "={{ $json.statusCode }}",
+              "rightValue": 300,
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "87d74dd8-119b-4e8c-9f9a-8d8f89c47544",
+      "name": "paid success",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1420,
+        -340
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "a0df595f-8133-4de4-9c0e-fb3d9ea309e1",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [
+        1000,
+        -340
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://192.168.1.155:3989/payments",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "182df69c-c374-4e13-b1ce-e21ff067a7a2",
+      "name": "Paid payment",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1220,
+        -340
+      ],
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"message\": \"ok\"\n}",
+        "options": {}
+      },
+      "id": "588b3e70-7409-4776-adc2-0179197563b2",
+      "name": "finish",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1660,
+        -480
+      ],
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"data\": {\n    \"id\": \"{{ $('Execute Workflow Trigger').item.json.data.id }}\"\n  }\n}",
+        "include": "none",
+        "options": {}
+      },
+      "id": "9e0adff7-f57c-46de-a0ce-7f30ab2f6a30",
+      "name": "Edit Fields",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.2,
+      "position": [
+        1840,
+        -280
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "{\n  \"message\": \"Service payment disrupt please retry again\"\n}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "bc6a01fc-4aa6-4b7e-8cfb-f59518bc03e1",
+      "name": "paid-error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1660,
+        -300
+      ],
+      "alwaysOutputData": false,
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "workflowId": "MKmyzwNCaIWXuOVP",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "id": "5a1d1eec-0a9b-417c-8d96-dd74ca77d5b0",
+      "name": "paid-fail",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        2020,
+        -260
+      ]
+    }
+  ],
+  "pinData": {
+    "Execute Workflow Trigger": [
+      {
+        "json": {
+          "data": {
+            "id": "asdasdasdasd"
+          }
+        }
+      }
+    ]
+  },
+  "connections": {
+    "paid success": {
+      "main": [
+        [
+          {
+            "node": "finish",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "paid-error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Paid payment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Paid payment": {
+      "main": [
+        [
+          {
+            "node": "paid success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "paid-fail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "paid-error": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "timezone": "Asia/Bangkok",
+    "saveExecutionProgress": true,
+    "executionTimeout": 600
+  },
+  "versionId": "886ad7dc-d1b1-4271-930a-2f53ff6d7fab",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "templateId": "1966",
+    "instanceId": "25b16ad807772f39504621ff5932db7bcf10680c4b6d8e356a1dc67faf8a40aa"
+  },
+  "id": "Xj4dlzUdyXOvq953",
+  "tags": []
+}

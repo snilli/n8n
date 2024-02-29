@@ -1,0 +1,100 @@
+{
+  "name": "subscription-paid-fail",
+  "nodes": [
+    {
+      "parameters": {
+        "channels": "trx-fail",
+        "options": {}
+      },
+      "id": "0e34d30c-0fce-4bea-a14d-2b685548463c",
+      "name": "Redis Trigger",
+      "type": "n8n-nodes-base.redisTrigger",
+      "typeVersion": 1,
+      "position": [
+        500,
+        420
+      ],
+      "credentials": {
+        "redis": {
+          "id": "pOruTxwVcNhxeUpU",
+          "name": "pPong Provide"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={ \n  \"data\": { \n    \"id\": \"{{ JSON.parse($json.message).key }}\"\n  }\n}",
+        "include": "selected",
+        "options": {}
+      },
+      "id": "cd80a567-6a54-4f67-bb0a-d4ca799a087f",
+      "name": "Edit Fields",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.2,
+      "position": [
+        720,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": "Xj4dlzUdyXOvq953",
+        "options": {}
+      },
+      "id": "f104b390-c300-4023-967c-889bf00e12dd",
+      "name": "paid",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        920,
+        420
+      ]
+    }
+  ],
+  "pinData": {
+    "Redis Trigger": [
+      {
+        "json": {
+          "channel": "trx-fail",
+          "message": "{\"key\":\"asdsd\",\"retryTime\":2}"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Redis Trigger": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "paid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "75241e28-da6c-4ebe-8878-40600170f32d",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "25b16ad807772f39504621ff5932db7bcf10680c4b6d8e356a1dc67faf8a40aa"
+  },
+  "id": "XNwjPncNUUpAukeJ",
+  "tags": []
+}

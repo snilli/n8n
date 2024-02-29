@@ -1,0 +1,221 @@
+{
+  "name": "trax",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "/hello",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "260e713b-7fa3-444c-a6fc-f8ed7e9ac0d9",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        480,
+        0
+      ],
+      "webhookId": "2dba3b42-966c-4477-9f6d-746b3ee27e59"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://192.168.1.155:3989/orders",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "5155641a-67db-470d-bab6-07ef66db35d0",
+      "name": "Create order",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        700,
+        0
+      ],
+      "alwaysOutputData": true,
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"message\": \"Service order disrupt please retry again\"\n}",
+        "options": {}
+      },
+      "id": "5a8047a6-1680-4c5b-b62a-018e8fda6446",
+      "name": "create order error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1220,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "55725518-474d-4844-93d3-3c3f4a499da2",
+              "leftValue": "={{ $json.statusCode }}",
+              "rightValue": 300,
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "51d7f3e4-9902-4cb4-a49e-648ef3db9e7d",
+      "name": "created order success",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        940,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": "Xj4dlzUdyXOvq953",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "id": "552c5786-6959-4b94-a071-e3a3be9e69f3",
+      "name": "paid",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        1520,
+        -60
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"data\": {\n    \"id\": \"{{ $json.body.id }}\"\n  }\n}",
+        "options": {}
+      },
+      "id": "dd362002-433d-4c63-8da5-974a4d6a77d9",
+      "name": "Edit Fields",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.2,
+      "position": [
+        1220,
+        -60
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"message\": \"ok\"\n}",
+        "options": {}
+      },
+      "id": "2609be87-3a59-42dc-91a6-afc4c76ede0b",
+      "name": "success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1760,
+        -60
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Create order",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create order": {
+      "main": [
+        [
+          {
+            "node": "created order success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "created order success": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "create order error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "paid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "paid": {
+      "main": [
+        [
+          {
+            "node": "success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "timezone": "Asia/Bangkok",
+    "saveExecutionProgress": true,
+    "executionTimeout": 600
+  },
+  "versionId": "1dfc5e3d-4a13-4dcf-97ea-b0d1ac9edaa1",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "templateId": "1966",
+    "instanceId": "25b16ad807772f39504621ff5932db7bcf10680c4b6d8e356a1dc67faf8a40aa"
+  },
+  "id": "owsV5RMbpf2Y6F7B",
+  "tags": []
+}
