@@ -24,7 +24,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
 
   n8n:
-    image: docker.n8n.io/n8nio/n8n
+    image: docker.n8n.io/n8nio/n8n:latest
     restart: always
     ports:
       - "127.0.0.1:5678:5678"
@@ -50,9 +50,47 @@ services:
       - NODE_ENV=production
       - WEBHOOK_URL=https://${SUBDOMAIN}.${DOMAIN_NAME}/
       - GENERIC_TIMEZONE=${GENERIC_TIMEZONE}
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
     volumes:
-      - n8n_data:/home/node/.n8n
+      - ./volumes:/home/node/.n8n
+
+  postgres:
+    image: postgres:latest
+    restart: always
+    environment:
+      POSTGRES_USER: mee
+      POSTGRES_DB: mee
+      POSTGRES_PASSWORD: mee
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:latest
+    restart: always
+    ports:
+      - 6379:6379
+  
+  mock:
+    image: mockoon/cli:latest
+    restart: always
+    command: >
+      -d data
+      -p 3989
+    ports:
+      - 3989:3989
+    volumes:
+      - ./mock-http.json:/data:ro
 
 volumes:
   traefik_data: {}
+  postgres_data: {}
   n8n_data: {}
