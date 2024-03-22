@@ -98,3 +98,9 @@ Convert json to html report when finish can open that html for see.
 ```bash
   artillery report ./result.json
 ```
+
+## FAQ
+
+#### Q: n8n error when first time run docker-compose up
+
+A: Just wait postgres container run init script finish then restart n8n container
