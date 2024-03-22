@@ -27,7 +27,7 @@ services:
     image: docker.n8n.io/n8nio/n8n:latest
     restart: always
     ports:
-      - "127.0.0.1:5678:5678"
+      - "5678:5678"
     labels:
       - traefik.enable=true
       - traefik.http.routers.n8n.rule=Host(`${SUBDOMAIN}.${DOMAIN_NAME}`)
@@ -66,6 +66,9 @@ services:
           memory: 256M
     volumes:
       - ./volumes:/home/node/.n8n
+    depends_on:
+      - postgres
+      - redis
 
   postgres:
     image: postgres:latest
@@ -77,7 +80,8 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - ./postgres_data:/var/lib/postgresql/data
+      # - ./postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
 
   redis:
     image: redis:latest
@@ -94,7 +98,7 @@ services:
     ports:
       - 3989:3989
     volumes:
-      - ./mock-http.json:/data:ro
+      - ./mock-servers/mock-http.json:/data:ro
 
 volumes:
   traefik_data: {}
