@@ -37,7 +37,7 @@ Start the server
 Start with go to [http://localhost:5678/](http://localhost:5678/) and Login with
 
 ```txt
-    user: test
+    username: test@test.com
     password: Test1234
 ```
 
