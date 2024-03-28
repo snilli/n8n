@@ -43,8 +43,8 @@ Start with go to [http://localhost:5678/](http://localhost:5678/) and Login with
 
 provide 2 http endpoints
 ```txt
-    /webhook/hello  # for run main process
-    /webhook/load   # for test connect postgres
+    http://localhost:5678/webhook/hello  # for run main process
+    http://localhost:5678/webhook/load   # for test connect postgres
 ```
 
 ## Appendix
@@ -136,3 +136,9 @@ A: Just wait postgres container run init script finish then restart n8n containe
 #### Q: If mock server is return wrong reponse
 
 A: Just restart that service
+
+#### Q: How to test webhook when Click Test workflow and display waithing for trigger event
+![Inquery postgres flow](./images/14.png)
+![Inquery postgres flow](./images/15.png)
+
+A: Just go to `http://localhost:5678/webhook-test/{webhook-path}`
