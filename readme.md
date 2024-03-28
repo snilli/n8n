@@ -47,6 +47,34 @@ provide 2 http endpoints
     /webhook/load   # for test connect postgres
 ```
 
+## Appendix
+
+### Webhook
+![Webhook](./images/8.png)
+Provide webhook endpoint
+
+### Http Client
+![Http Client](./images/9.png)
+Provide http request for call api 
+
+### If
+![If](./images/10.png)
+Provide condition thinking true and false
+
+### Execute Workflow
+![Execute Workflow](./images/11.png)
+Provide workflow execution just pass workflow id that need to execute
+
+### Json editor
+![Json editor](./images/12.png)
+Provide manipulate json
+
+### Webhook response
+![Webhook response](./images/13.png)
+Provide manipulate data to response to webhook endpoint
+
+---
+
 ## Flow scenarios
 
 ### Create Order Flow
@@ -84,8 +112,8 @@ This flow is just receive order id to call delete order service
 This flow is just inquery to postgres table customer you can edit select condition
 ![Inquery postgres flow](./images/7.png)
 
-## Load Test
-
+## Load Test 
+[artillery](https://www.artillery.io/)
 This project use artillery for tool load test script in dir loadtests.
 
 ```bash
@@ -104,3 +132,7 @@ Convert json to html report when finish can open that html for see.
 #### Q: n8n error when first time run docker-compose up
 
 A: Just wait postgres container run init script finish then restart n8n container
+
+#### Q: If mock server is return wrong reponse
+
+A: Just restart that service
